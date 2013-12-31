@@ -25,6 +25,6 @@ To-do
 [x] Performance: filtering trips on route_id takes half a second. GTFS trim fixed this.
 [x] Performance: going to stop_times puts us at 22 seconds. ugh. Fixed by trimming the GTFS. Also ugh.
 [ ] Performance: stops.txt adds 200ms to our script.
-[ ] Sort trips by service_id then direction
+[x] Sort trips by service_id then direction
 [ ] Nice to have a way of returning a dict (instead of an array) keyed on my field of choice. 1 use counted.
 [ ] Put stop times inside trips in response object

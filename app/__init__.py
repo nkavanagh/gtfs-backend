@@ -1,5 +1,6 @@
 import os
 import csv
+from operator import itemgetter
 from flask import Flask, url_for, Response, json
 
 # consts; must be a better place for these
@@ -119,6 +120,8 @@ def route(feedname, route_id):
 	trips = read_csv(filename, 
 					filter={ 'route_id': route_id },
 					fields=[ 'direction_id', 'route_id', 'service_id', 'trip_headsign', 'trip_id' ])
+					
+	trips = sorted(trips, key=itemgetter('service_id', 'direction_id'))
 	
 	trip_ids = []
 	
@@ -130,7 +133,9 @@ def route(feedname, route_id):
 	stop_times = read_csv(filename, 
 						filter={ 'trip_id': trip_ids },
 						fields=[ 'departure_time', 'drop_off_type', 'pickup_type', 'stop_id', 'stop_sequence', 'trip_id' ])
-	
+						
+	stop_times = sorted(stop_times, key=itemgetter('trip_id', 'stop_sequence'))
+
 	stop_ids = []
 	
 	for stop_time in stop_times:
