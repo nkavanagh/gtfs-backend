@@ -2,6 +2,19 @@ import os
 import csv
 from flask import Flask, url_for, Response, json
 
+# consts; must be a better place for these
+
+GTFS_ROUTE_TYPE_TRAM = '0'
+GTFS_ROUTE_TYPE_SUBWAY = '1'
+GTFS_ROUTE_TYPE_RAIL = '2'
+GTFS_ROUTE_TYPE_BUS = '3'
+GTFS_ROUTE_TYPE_FERRY = '4'
+GTFS_ROUTE_TYPE_CABLECAR = '5'
+GTFS_ROUTE_TYPE_GONDOLA = '6'
+GTFS_ROUTE_TYPE_FUNICULAR = '7'
+
+# the app
+
 app = Flask(__name__)
 
 # TODO: move configuration out of here
@@ -15,7 +28,11 @@ app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
 # read a csv file and return each row as a dictionary keyed off the 
 # columns that are presumably in the first line of the csv
-def read_csv(csv_filename):
+# filename is first positional arg, dictionary used for filtering
+def read_csv(*args, **kwargs):
+	print args
+	print kwargs
+	csv_filename = args[0]
 	f  = open(csv_filename, "rb")
 	reader = csv.reader(f)
 	rows = []
@@ -32,8 +49,21 @@ def read_csv(csv_filename):
 				row[header[colnum]] = col
 				colnum += 1
 				
-			rows.append(row)
-
+			# are we filtering?
+			if len(kwargs) > 0:
+				for k in kwargs.keys():
+					if k in row:
+						if isinstance(kwargs[k], list):
+							# for array values, test that it is 'in'
+							if row[k] in kwargs[k]:
+								rows.append(row)
+						elif row[k] == kwargs[k]:
+							# for scalar values, test equality
+							rows.append(row)
+			else:
+				# no filtering, just add it
+				rows.append(row)
+	
 		linenum += 1
 	
 	f.close()
@@ -50,23 +80,53 @@ def create_response(data):
 # routing
 
 @app.route('/')
-@app.route('/agencies')
-def agencies():
-	agencies = []
+def feeds():
+	feeds = []
 	for filename in os.listdir(app.config['GTFS_DIR']):
-		rows = read_csv(app.config['GTFS_DIR'] + '/' + filename + '/agency.txt')
-		agencies.append(rows)
+		feed = { 'feed_name': filename }
+		feed['agencies'] = read_csv(app.config['GTFS_DIR'] + '/' + filename + '/agency.txt')
+		feeds.append(feed)
 	
-	return create_response(agencies)
+	return create_response(feeds)
 
-@app.route('/agencies/<agencyid>')
-def agency(agencyid):
-	return 'List of services for ' + url_for('agency', agencyid=agencyid)
+@app.route('/<feedname>')
+def routes(feedname):
+	routes = read_csv(app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt')
+	
+	return create_response(routes)
+	
+@app.route('/<feedname>/rail')
+def rail_routes(feedname):
+	filename = app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt'
+	routes = read_csv(filename, route_type=GTFS_ROUTE_TYPE_RAIL)
 
-@app.route('/agencies/<agencyid>/<serviceid>')
-def api_article(agencyid, serviceid):
-	return agencyid + ' runs the ' + serviceid + ' service'
-
+	return create_response(routes)
+	
+@app.route('/<feedname>/<route_id>')
+def route(feedname, route_id):
+	filename = app.config['GTFS_DIR'] + '/' + feedname + '/trips.txt'
+	trips = read_csv(filename, route_id=route_id)
+	
+	trip_ids = []
+	
+	for trip in trips:
+		trip_ids.append(trip['trip_id'])
+		
+	# grab stop times and stops for these trips
+	filename = app.config['GTFS_DIR'] + '/' + feedname + '/stop_times.txt'
+	stop_times = read_csv(filename, trip_id=trip_ids)
+	
+	stop_ids = []
+	
+	for stop_time in stop_times:
+		stop_ids.append(stop_time['stop_id'])
+	
+	filename = app.config['GTFS_DIR'] + '/' + feedname + '/stops.txt'
+	stops = read_csv(filename, stop_id=stop_ids)
+	
+	route = { 'trips': trips, 'stop_times': stop_times, 'stops': stops }
+	
+	return create_response(route)
+	
 if __name__ == '__main__':
 	app.run()
-	
