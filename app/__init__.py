@@ -46,18 +46,26 @@ def read_csv(*args, **kwargs):
 			row = {}
 			colnum = 0
 			for col in line:
-				row[header[colnum]] = col
+				# all fields, or just some?
+				if 'fields' in kwargs:
+					# just some
+					if header[colnum] in kwargs['fields']:
+						row[header[colnum]] = col
+				else:
+					# all fields
+					row[header[colnum]] = col
+					
 				colnum += 1
 				
 			# are we filtering?
-			if len(kwargs) > 0:
-				for k in kwargs.keys():
+			if 'filter' in kwargs:
+				for k in kwargs['filter'].keys():
 					if k in row:
-						if isinstance(kwargs[k], list):
+						if isinstance(kwargs['filter'][k], list):
 							# for array values, test that it is 'in'
-							if row[k] in kwargs[k]:
+							if row[k] in kwargs['filter'][k]:
 								rows.append(row)
-						elif row[k] == kwargs[k]:
+						elif row[k] == kwargs['filter'][k]:
 							# for scalar values, test equality
 							rows.append(row)
 			else:
@@ -98,14 +106,14 @@ def routes(feedname):
 @app.route('/<feedname>/rail')
 def rail_routes(feedname):
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt'
-	routes = read_csv(filename, route_type=GTFS_ROUTE_TYPE_RAIL)
+	routes = read_csv(filename, filter={ 'route_type': GTFS_ROUTE_TYPE_RAIL } )
 
 	return create_response(routes)
 	
 @app.route('/<feedname>/<route_id>')
 def route(feedname, route_id):
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/trips.txt'
-	trips = read_csv(filename, route_id=route_id)
+	trips = read_csv(filename, filter={ 'route_id': route_id } )
 	
 	trip_ids = []
 	
@@ -114,7 +122,7 @@ def route(feedname, route_id):
 		
 	# grab stop times and stops for these trips
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/stop_times.txt'
-	stop_times = read_csv(filename, trip_id=trip_ids)
+	stop_times = read_csv(filename, filter={ 'trip_id': trip_ids } )
 	
 	stop_ids = []
 	
@@ -122,7 +130,9 @@ def route(feedname, route_id):
 		stop_ids.append(stop_time['stop_id'])
 	
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/stops.txt'
-	stops = read_csv(filename, stop_id=stop_ids)
+	stops = read_csv(filename, 
+	  				filter={ 'stop_id': stop_ids },
+					fields=['stop_id', 'stop_lon', 'stop_lat', 'stop_name'])
 	
 	route = { 'trips': trips, 'stop_times': stop_times, 'stops': stops }
 	

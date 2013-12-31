@@ -3,6 +3,8 @@ GTFS Backend
 
 Backend code for serving up GTFS transit data. Uses [Flask](http://flask.pocoo.org).
 
+This code is not fit for use, yet.
+
 To-do
 =====
 
@@ -13,7 +15,7 @@ To-do
 [x] Permit filtering of service list by service_id
 [ ] Only include useful fields
 [ ] Allow optional inclusion of the fields that aren't "useful"
-[ ] Pretty print the JSON?
+[ ] Pretty print the JSON
 [ ] gzip responses
 [ ] ETag based on GTFS files involved in generating a response
 [ ] Last modified based on GTFS files involved in generation a response
