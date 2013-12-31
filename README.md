@@ -13,8 +13,8 @@ To-do
 [x] Add value filtering capability when reading the CSV files
 [ ] Version API using URL
 [x] Permit filtering of service list by service_id
-[ ] Only include useful fields
-[ ] Allow optional inclusion of the fields that aren't "useful"
+[x] Only include useful fields
+[ ] Allow optional inclusion of the fields that aren't "useful". Expose this to consumers. First part done.6
 [ ] Pretty print the JSON
 [ ] gzip responses
 [ ] ETag based on GTFS files involved in generating a response

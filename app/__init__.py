@@ -99,21 +99,26 @@ def feeds():
 
 @app.route('/<feedname>')
 def routes(feedname):
-	routes = read_csv(app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt')
+	filename = app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt'
+	routes = read_csv(filename, fields=[ 'route_id', 'route_long_name', 'route_type' ])
 	
 	return create_response(routes)
 	
 @app.route('/<feedname>/rail')
 def rail_routes(feedname):
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt'
-	routes = read_csv(filename, filter={ 'route_type': GTFS_ROUTE_TYPE_RAIL } )
+	routes = read_csv(filename, 
+					filter={ 'route_type': GTFS_ROUTE_TYPE_RAIL },
+					fields=[ 'route_id', 'route_long_name', 'route_type' ] )
 
 	return create_response(routes)
 	
 @app.route('/<feedname>/<route_id>')
 def route(feedname, route_id):
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/trips.txt'
-	trips = read_csv(filename, filter={ 'route_id': route_id } )
+	trips = read_csv(filename, 
+					filter={ 'route_id': route_id },
+					fields=[ 'direction_id', 'route_id', 'service_id', 'trip_headsign', 'trip_id' ])
 	
 	trip_ids = []
 	
@@ -122,7 +127,9 @@ def route(feedname, route_id):
 		
 	# grab stop times and stops for these trips
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/stop_times.txt'
-	stop_times = read_csv(filename, filter={ 'trip_id': trip_ids } )
+	stop_times = read_csv(filename, 
+						filter={ 'trip_id': trip_ids },
+						fields=[ 'departure_time', 'drop_off_type', 'pickup_type', 'stop_id', 'stop_sequence', 'trip_id' ])
 	
 	stop_ids = []
 	
@@ -132,7 +139,7 @@ def route(feedname, route_id):
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/stops.txt'
 	stops = read_csv(filename, 
 	  				filter={ 'stop_id': stop_ids },
-					fields=['stop_id', 'stop_lon', 'stop_lat', 'stop_name'])
+					fields=[ 'stop_id', 'stop_lon', 'stop_lat', 'stop_name' ])
 	
 	route = { 'trips': trips, 'stop_times': stop_times, 'stops': stops }
 	
