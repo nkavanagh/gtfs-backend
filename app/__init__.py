@@ -29,7 +29,10 @@ app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
 # read a csv file and return each row as a dictionary keyed off the 
 # columns that are presumably in the first line of the csv
-# filename is first positional arg, dictionary used for filtering
+# filename is first positional arg
+# named arg fields controls what fields are returned
+# named arg filters specifies some comparison check on rows 
+# named arg keyed_on returns a dictionary keyed on the specified column
 def read_csv(*args, **kwargs):
 	print args
 	print kwargs
@@ -37,6 +40,10 @@ def read_csv(*args, **kwargs):
 	f  = open(csv_filename, "rb")
 	reader = csv.reader(f)
 	rows = []
+	
+	if 'keyed_on' in kwargs:
+		rows = {}
+		
 	linenum = 0
 	
 	for line in reader:
@@ -65,13 +72,22 @@ def read_csv(*args, **kwargs):
 						if isinstance(kwargs['filter'][k], list):
 							# for array values, test that it is 'in'
 							if row[k] in kwargs['filter'][k]:
-								rows.append(row)
+								if 'keyed_on' in kwargs:
+									rows[row[kwargs['keyed_on']]] = row
+								else:
+									rows.append(row)
 						elif row[k] == kwargs['filter'][k]:
 							# for scalar values, test equality
-							rows.append(row)
+							if 'keyed_on' in kwargs:
+								rows[row[kwargs['keyed_on']]] = row
+							else:
+								rows.append(row)
 			else:
 				# no filtering, just add it
-				rows.append(row)
+				if 'keyed_on' in kwargs:
+					rows[row[kwargs['keyed_on']]] = row
+				else:
+					rows.append(row)
 	
 		linenum += 1
 	
@@ -115,19 +131,18 @@ def rail_routes(feedname):
 	return create_response(routes)
 	
 @app.route('/<feedname>/<route_id>')
+@app.route('/<feedname>/rail/<route_id>')
 def route(feedname, route_id):
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/trips.txt'
 	trips = read_csv(filename, 
 					filter={ 'route_id': route_id },
-					fields=[ 'direction_id', 'route_id', 'service_id', 'trip_headsign', 'trip_id' ])
+					fields=[ 'direction_id', 'route_id', 'service_id', 'trip_headsign', 'trip_id' ],
+					keyed_on='trip_id')
 					
-	trips = sorted(trips, key=itemgetter('service_id', 'direction_id'))
+	#trips = sorted(trips, key=itemgetter('service_id', 'direction_id'))
 	
-	trip_ids = []
+	trip_ids = trips.keys()
 	
-	for trip in trips:
-		trip_ids.append(trip['trip_id'])
-		
 	# grab stop times and stops for these trips
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/stop_times.txt'
 	stop_times = read_csv(filename, 
@@ -144,7 +159,8 @@ def route(feedname, route_id):
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/stops.txt'
 	stops = read_csv(filename, 
 	  				filter={ 'stop_id': stop_ids },
-					fields=[ 'stop_id', 'stop_lon', 'stop_lat', 'stop_name' ])
+					fields=[ 'stop_id', 'stop_lon', 'stop_lat', 'stop_name' ],
+					keyed_on='stop_id')
 	
 	route = { 'trips': trips, 'stop_times': stop_times, 'stops': stops }
 	

@@ -14,7 +14,7 @@ To-do
 [ ] Version API using URL
 [x] Permit filtering of service list by service_id
 [x] Only include useful fields
-[ ] Allow optional inclusion of the fields that aren't "useful". Expose this to consumers. First part done.6
+[ ] Allow optional inclusion of the fields that aren't "useful". Expose this to consumers. First part done.
 [ ] Pretty print the JSON
 [ ] gzip responses
 [ ] ETag based on GTFS files involved in generating a response
@@ -28,3 +28,5 @@ To-do
 [x] Sort trips by service_id then direction
 [ ] Nice to have a way of returning a dict (instead of an array) keyed on my field of choice. 1 use counted.
 [ ] Put stop times inside trips in response object
+[ ] Key stops on stop_id
+[ ] Cache full JSON responses. Expire cache only when a source document (i.e. the GTFS) is modified.
