@@ -162,7 +162,17 @@ def route(feedname, route_id):
 					fields=[ 'stop_id', 'stop_lon', 'stop_lat', 'stop_name' ],
 					keyed_on='stop_id')
 	
-	route = { 'trips': trips, 'stop_times': stop_times, 'stops': stops }
+	# get the service information for these trips
+	service_ids = list(set([trip['service_id'] for trip in trips.values()]))
+	filename = app.config['GTFS_DIR'] + '/' + feedname + '/calendar.txt'
+	services = read_csv(filename, 
+						filter={ 'service_id': service_ids }
+						)
+						
+	# TODO: deal with calendar_dates
+	
+	# generate response
+	route = { 'services': services, 'trips': trips, 'stop_times': stop_times, 'stops': stops }
 	
 	return create_response(route)
 	
