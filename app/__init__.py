@@ -166,7 +166,8 @@ def route(feedname, route_id):
 	service_ids = list(set([trip['service_id'] for trip in trips.values()]))
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/calendar.txt'
 	services = read_csv(filename, 
-						filter={ 'service_id': service_ids }
+						filter={ 'service_id': service_ids },
+						keyed_on='service_id'
 						)
 						
 	# TODO: deal with calendar_dates
