@@ -30,3 +30,4 @@ To-do
 - [ ] Put stop times inside trips in response object
 - [x] Key stops on stop_id
 - [ ] Cache full JSON responses. Expire cache only when a source document (i.e. the GTFS) is modified.
+- [x] Each service should contain its trips

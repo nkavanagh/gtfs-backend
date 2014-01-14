@@ -34,8 +34,6 @@ app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 # named arg filters specifies some comparison check on rows 
 # named arg keyed_on returns a dictionary keyed on the specified column
 def read_csv(*args, **kwargs):
-	print args
-	print kwargs
 	csv_filename = args[0]
 	f  = open(csv_filename, "rb")
 	reader = csv.reader(f)
@@ -102,6 +100,24 @@ def create_response(data):
 
 	return response
 	
+# build a dictionary from a sequence
+def build_dictionary(seq, key):
+    return dict((d[key], dict(d)) for d in seq)
+
+# filter sequence of dictionaries. will match anything. not ideal. TODO.
+def filter_dictionaries(*args, **kwargs):
+	filtered = []
+	
+	for item in args[0]:
+		for key in kwargs.keys():
+			print "Checking for %s in %s" % (key, item)
+			if key in item:
+				if item[key] == kwargs[key]:
+					filtered.append(item)
+			
+	return filtered
+		
+
 # routing
 
 @app.route('/')
@@ -171,6 +187,13 @@ def route(feedname, route_id):
 						)
 						
 	# TODO: deal with calendar_dates
+	
+	# Each service should contain its trips
+	for service_id in service_ids:
+		#print trips.values()
+		#service_trips = build_dictionary(trips.values(), 'trip_id')
+		service_trips = filter_dictionaries(trips.values(), service_id=service_id)
+		services[service_id]['trips'] = build_dictionary(service_trips, 'trip_id')
 	
 	# generate response
 	route = { 'services': services, 'trips': trips, 'stop_times': stop_times, 'stops': stops }
