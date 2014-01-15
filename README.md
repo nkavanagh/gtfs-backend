@@ -31,3 +31,5 @@ To-do
 - [x] Key stops on stop_id
 - [ ] Cache full JSON responses. Expire cache only when a source document (i.e. the GTFS) is modified.
 - [x] Each service should contain its trips
+- [ ] When creating a dictionary, append to an existing sequence key (e.g. stop times keyed on trip should return dict keyed on trip_id with values of all stops_)
+- [ ] Use numeric types for numeric CSV values

@@ -52,6 +52,13 @@ def read_csv(*args, **kwargs):
 			row = {}
 			colnum = 0
 			for col in line:
+				# is this numeric?
+				try:
+					numval = float(col)
+					col = numval
+				except ValueError:
+					pass # no-op
+					
 				# all fields, or just some?
 				if 'fields' in kwargs:
 					# just some
@@ -190,13 +197,15 @@ def route(feedname, route_id):
 	
 	# Each service should contain its trips
 	for service_id in service_ids:
-		#print trips.values()
-		#service_trips = build_dictionary(trips.values(), 'trip_id')
 		service_trips = filter_dictionaries(trips.values(), service_id=service_id)
 		services[service_id]['trips'] = build_dictionary(service_trips, 'trip_id')
+		
+		# each trip contains its stops
+		for trip_id in services[service_id]['trips'].keys():
+			services[service_id]['trips'][trip_id]['stops'] = filter_dictionaries(stop_times, trip_id=trip_id)
 	
 	# generate response
-	route = { 'services': services, 'trips': trips, 'stop_times': stop_times, 'stops': stops }
+	route = { 'services': services, 'stops': stops }
 	
 	return create_response(route)
 	
