@@ -17,7 +17,6 @@ GTFS_ROUTE_TYPE_FUNICULAR = '7'
 # the app
 
 app = Flask(__name__)
-
 app.config.from_envvar('GTFS_BACKEND_SETTINGS')
 
 # utility functions
@@ -48,10 +47,17 @@ def read_csv(*args, **kwargs):
 			colnum = 0
 			for col in line:
 				# is this numeric?
+				
 				try:
-					numval = float(col)
+					numval = int(col)
 					col = numval
 				except ValueError:
+					# really?
+					try:
+						numval = float(col)
+						col = numval
+					except ValueError:
+						pass
 					pass # no-op
 					
 				# all fields, or just some?
@@ -96,10 +102,7 @@ def read_csv(*args, **kwargs):
 
 # construct a HTTP JSON response for some data
 def create_response(data):
-	js = json.dumps(data)
-
-	response = Response(js, status=200, mimetype='application/json')
-
+	response = json.jsonify(data)
 	return response
 	
 # build a dictionary from a sequence
@@ -132,7 +135,7 @@ def feeds():
 	
 	return create_response(feeds)
 
-@app.route('/<feedname>')
+@app.route('/<feedname>/')
 def routes(feedname):
 	if feedname not in app.config['GTFS_FEEDS']:
 		abort(404)
@@ -142,7 +145,7 @@ def routes(feedname):
 	
 	return create_response(routes)
 	
-@app.route('/<feedname>/rail')
+@app.route('/<feedname>/rail/')
 def rail_routes(feedname):
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt'
 	routes = read_csv(filename, 
@@ -151,8 +154,8 @@ def rail_routes(feedname):
 
 	return create_response(routes)
 	
-@app.route('/<feedname>/<route_id>')
-@app.route('/<feedname>/rail/<route_id>')
+@app.route('/<feedname>/<route_id>/')
+@app.route('/<feedname>/rail/<route_id>/')
 def route(feedname, route_id):
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/trips.txt'
 	trips = read_csv(filename, 

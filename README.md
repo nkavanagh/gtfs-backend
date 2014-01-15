@@ -5,6 +5,8 @@ Backend code for serving up GTFS transit data. Uses [Flask](http://flask.pocoo.o
 
 This code is not fit for use just yet.
 
+Caching and response changes are being punted to the frontend. 
+
 To-do
 =====
 
@@ -15,13 +17,12 @@ To-do
 - [x] Permit filtering of service list by service_id
 - [x] Only include useful fields
 - [ ] Allow optional inclusion of the fields that aren't "useful". Expose this to consumers. First part done.
-- [ ] Pretty print the JSON
-- [ ] gzip responses
+- [x] Pretty print the JSON
 - [ ] ETag based on GTFS files involved in generating a response
 - [ ] Last modified based on GTFS files involved in generation a response
-- [ ] Return 404 when a feed is not found
+- [x] Return 404 when a feed is not found
 - [ ] Return JSON data on errors. "description" for the developer, "message" for the user.
-- [ ] Should be able to use a trailing slash on these urls
+- [x] Should be able to use a trailing slash on these urls
 - [x] Performance: filtering trips on route_id takes half a second. GTFS trim fixed this.
 - [x] Performance: going to stop_times puts us at 22 seconds. ugh. Fixed by trimming the GTFS. Also ugh.
 - [ ] Performance: stops.txt adds 200ms to our script.
