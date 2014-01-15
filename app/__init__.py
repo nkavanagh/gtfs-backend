@@ -1,7 +1,7 @@
 import os
 import csv
 from operator import itemgetter
-from flask import Flask, url_for, Response, json
+from flask import Flask, url_for, Response, json, render_template, abort
 
 # consts; must be a better place for these
 
@@ -18,12 +18,7 @@ GTFS_ROUTE_TYPE_FUNICULAR = '7'
 
 app = Flask(__name__)
 
-# TODO: move configuration out of here
-app.config.update(
-    DEBUG=True,
-    GTFS_DIR='/Users/niall/GTFS'
-)
-app.config.from_envvar('FLASKR_SETTINGS', silent=True)
+app.config.from_envvar('GTFS_BACKEND_SETTINGS')
 
 # utility functions
 
@@ -139,6 +134,9 @@ def feeds():
 
 @app.route('/<feedname>')
 def routes(feedname):
+	if feedname not in app.config['GTFS_FEEDS']:
+		abort(404)
+		
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt'
 	routes = read_csv(filename, fields=[ 'route_id', 'route_long_name', 'route_type' ])
 	

@@ -3,13 +3,13 @@ GTFS Backend
 
 Backend code for serving up GTFS transit data. Uses [Flask](http://flask.pocoo.org).
 
-This code is not fit for use, yet.
+This code is not fit for use just yet.
 
 To-do
 =====
 
 - [ ] Add optional support for a response envelope
-- [ ] Double check all paths, especially those dealing with user input
+- [x] Double check all paths, especially those dealing with user input
 - [x] Add value filtering capability when reading the CSV files
 - [ ] Version API using URL
 - [x] Permit filtering of service list by service_id
@@ -27,9 +27,9 @@ To-do
 - [ ] Performance: stops.txt adds 200ms to our script.
 - [x] Sort trips by service_id then direction
 - [x] Nice to have a way of returning a dict (instead of an array) keyed on my field of choice. 
-- [ ] Put stop times inside trips in response object
+- [x] Put stop times inside trips in response object
 - [x] Key stops on stop_id
 - [ ] Cache full JSON responses. Expire cache only when a source document (i.e. the GTFS) is modified.
 - [x] Each service should contain its trips
 - [ ] When creating a dictionary, append to an existing sequence key (e.g. stop times keyed on trip should return dict keyed on trip_id with values of all stops_)
-- [ ] Use numeric types for numeric CSV values
+- [x] Use numeric types for numeric CSV values
