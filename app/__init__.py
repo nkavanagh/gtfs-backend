@@ -102,6 +102,7 @@ def read_csv(*args, **kwargs):
 
 # construct a HTTP JSON response for some data
 def create_response(data):
+	print 'Creating a response for %s' % (data)
 	response = json.jsonify(data)
 	return response
 	
@@ -128,7 +129,11 @@ def filter_dictionaries(*args, **kwargs):
 @app.route('/')
 def feeds():
 	feeds = []
+	print 'Checking in %s for feeds' % ( app.config['GTFS_DIR'] )
 	for filename in os.listdir(app.config['GTFS_DIR']):
+		if filename not in app.config['GTFS_FEEDS']:
+			continue
+			
 		feed = { 'feed_name': filename }
 		feed['agencies'] = read_csv(app.config['GTFS_DIR'] + '/' + filename + '/agency.txt')
 		feeds.append(feed)
