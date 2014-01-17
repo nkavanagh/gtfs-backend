@@ -102,9 +102,10 @@ def read_csv(*args, **kwargs):
 
 # construct a HTTP JSON response for some data
 def create_response(data):
-	response = json.jsonify(data)
-	return response
-	
+	print 'Creating a response for %s' % (data)
+	responseBody = json.dumps(data, indent=4, separators=(',', ': '))
+	return Response(responseBody,  mimetype='application/json')
+		
 # build a dictionary from a sequence
 def build_dictionary(seq, key):
     return dict((d[key], dict(d)) for d in seq)
