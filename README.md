@@ -34,3 +34,5 @@ To-do
 - [x] Each service should contain its trips
 - [ ] When creating a dictionary, append to an existing sequence key (e.g. stop times keyed on trip should return dict keyed on trip_id with values of all stops_)
 - [x] Use numeric types for numeric CSV values
+- [ ] Get rid of settings.cfg
+- [ ] Get rid of extraneous values, like the trip_id in each stop time

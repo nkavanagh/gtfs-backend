@@ -141,7 +141,7 @@ def feeds():
 
 @app.route('/<feedname>/')
 def routes(feedname):
-	if feedname not in app.config['GTFS_FEEDS']:
+	if feedname not in os.listdir(app.config['GTFS_DIR']):
 		abort(404)
 		
 	filename = app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt'
