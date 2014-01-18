@@ -36,3 +36,4 @@ To-do
 - [x] Use numeric types for numeric CSV values
 - [ ] Get rid of settings.cfg
 - [ ] Get rid of extraneous values, like the trip_id in each stop time
+- [ ] /mbta/rail/ is taking 1.6 minutes on an untrimmed GTFS file. That is awful, as is trimming.

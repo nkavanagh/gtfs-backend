@@ -5,14 +5,14 @@ from flask import Flask, url_for, Response, json, render_template, abort
 
 # consts; must be a better place for these
 
-GTFS_ROUTE_TYPE_TRAM = '0'
-GTFS_ROUTE_TYPE_SUBWAY = '1'
-GTFS_ROUTE_TYPE_RAIL = '2'
-GTFS_ROUTE_TYPE_BUS = '3'
-GTFS_ROUTE_TYPE_FERRY = '4'
-GTFS_ROUTE_TYPE_CABLECAR = '5'
-GTFS_ROUTE_TYPE_GONDOLA = '6'
-GTFS_ROUTE_TYPE_FUNICULAR = '7'
+GTFS_ROUTE_TYPE_TRAM = 0
+GTFS_ROUTE_TYPE_SUBWAY = 1
+GTFS_ROUTE_TYPE_RAIL = 2
+GTFS_ROUTE_TYPE_BUS = 3
+GTFS_ROUTE_TYPE_FERRY = 4
+GTFS_ROUTE_TYPE_CABLECAR = 5
+GTFS_ROUTE_TYPE_GONDOLA = 6
+GTFS_ROUTE_TYPE_FUNICULAR = 7
 
 # the app
 
@@ -129,7 +129,6 @@ def filter_dictionaries(*args, **kwargs):
 @app.route('/')
 def feeds():
 	feeds = []
-	print 'Checking in %s for feeds' % ( app.config['GTFS_DIR'] )
 	for filename in os.listdir(app.config['GTFS_DIR']):
 		feed = { 'feed_name': filename }
 		feed['agencies'] = read_csv(app.config['GTFS_DIR'] + '/' + filename + '/agency.txt')
