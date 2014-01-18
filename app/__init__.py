@@ -17,7 +17,8 @@ GTFS_ROUTE_TYPE_FUNICULAR = '7'
 # the app
 
 app = Flask(__name__)
-app.config.from_envvar('GTFS_BACKEND_SETTINGS')
+app.config['DEBUG'] = True
+app.config['GTFS_DIR'] = '/var/gtfs'
 
 # utility functions
 
