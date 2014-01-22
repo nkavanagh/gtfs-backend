@@ -35,7 +35,8 @@ To-do
       my field of choice. 
 - [x] Put stop times inside trips in response object
 - [x] Key stops on stop_id
-- [ ] Cache full JSON responses. Expire cache only when a source document (i.e. the GTFS) is modified.
+- [ ] Cache full JSON responses. Expire cache only when a source document 
+      (i.e. the GTFS) is modified. Partially complete.
 - [x] Each service should contain its trips
 - [ ] When creating a dictionary, append to an existing sequence key (e.g. 
       stop times keyed on trip should return dict keyed on trip_id with values 
@@ -44,4 +45,4 @@ To-do
 - [ ] Get rid of settings.cfg
 - [ ] Get rid of extraneous values, like the trip_id in each stop time
 - [ ] /mbta/rail/ is taking 1.6 minutes on an untrimmed GTFS file. That is 
-      awful, as is trimming.
+      awful, as is trimming. Caching made this a bit better.
