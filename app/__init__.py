@@ -23,7 +23,10 @@ app.config['GTFS_DIR'] = '/var/gtfs'
 
 # cache
 
-cache = Cache(config={'CACHE_TYPE': 'simple'})
+cache = Cache(config={'CACHE_TYPE': 'filesystem',
+                      'CACHE_KEY_PREFIX': 'gtfs.',
+                      'CACHE_DIR': os.environ.get('TMPDIR'),
+                      'CACHE_DEFAULT_TIMEOUT': 57600})
 cache.init_app(app)
 
 # utility functions
@@ -127,7 +130,6 @@ def filter_dictionaries(*args, **kwargs):
 
     for item in args[0]:
         for key in kwargs.keys():
-            print "Checking for %s in %s" % (key, item)
             if key in item:
                 if item[key] == kwargs[key]:
                     filtered.append(item)
@@ -173,7 +175,7 @@ def rail_routes(feedname):
 
 @app.route('/<feedname>/<route_id>/')
 @app.route('/<feedname>/rail/<route_id>/')
-@cache.cached(timeout=50, key_prefix='route')
+@cache.memoize()
 def route(feedname, route_id):
     filename = app.config['GTFS_DIR'] + '/' + feedname + '/trips.txt'
     trips = read_csv(filename,
