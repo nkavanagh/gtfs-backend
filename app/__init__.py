@@ -1,7 +1,8 @@
 import os
 import csv
 from operator import itemgetter
-from flask import Flask, url_for, Response, json, render_template, abort
+from flask import Flask, Response, json, abort
+from flask.ext.cache import Cache
 
 # consts; must be a better place for these
 
@@ -19,6 +20,11 @@ GTFS_ROUTE_TYPE_FUNICULAR = 7
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['GTFS_DIR'] = '/var/gtfs'
+
+# cache
+
+cache = Cache(config={'CACHE_TYPE': 'simple'})
+cache.init_app(app)
 
 # utility functions
 
@@ -39,69 +45,69 @@ def read_csv(*args, **kwargs):
     if 'keyed_on' in kwargs:
         rows = {}
 
-        linenum = 0
+    linenum = 0
 
-        for line in reader:
-            # Save header row.
-            if linenum == 0:
-                header = line
-            else:
-                row = {}
-                colnum = 0
-                for col in line:
-                    # is this numeric?
+    for line in reader:
+        # Save header row.
+        if linenum == 0:
+            header = line
+        else:
+            row = {}
+            colnum = 0
+            for col in line:
+                # is this numeric?
 
-                                try:
-                                    numval = int(col)
-                                    col = numval
-                                except ValueError:
-                                    # really?
-                                    try:
-                                        numval = float(col)
-                                        col = numval
-                                    except ValueError:
-                                        pass
-                                    pass  # no-op
+                try:
+                    numval = int(col)
+                    col = numval
+                except ValueError:
+                    # really?
+                    try:
+                        numval = float(col)
+                        col = numval
+                    except ValueError:
+                        pass
+                    pass  # no-op
 
-                                # all fields, or just some?
-                                if 'fields' in kwargs:
-                                    # just some
-                                    if header[colnum] in kwargs['fields']:
-                                        row[header[colnum]] = col
-                                    else:
-                                        # all fields
-                                        row[header[colnum]] = col
+                # all fields, or just some?
+                if 'fields' in kwargs:
+                    # just some
+                    if header[colnum] in kwargs['fields']:
+                        row[header[colnum]] = col
+                else:
+                    # all fields
+                    row[header[colnum]] = col
 
-                                colnum += 1
+                colnum += 1
 
-                # are we filtering?
-                if 'filter' in kwargs:
-                    for k in kwargs['filter'].keys():
-                        if k in row:
-                            if isinstance(kwargs['filter'][k], list):
-                                # for array values, test that it is 'in'
-                                if row[k] in kwargs['filter'][k]:
-                                    if 'keyed_on' in kwargs:
-                                        rows[row[kwargs['keyed_on']]] = row
-                                    else:
-                                        rows.append(row)
-                                elif row[k] == kwargs['filter'][k]:
-                                    # for scalar values, test equality
-                                    if 'keyed_on' in kwargs:
-                                        rows[row[kwargs['keyed_on']]] = row
-                                    else:
-                                        rows.append(row)
+            # are we filtering?
+            if 'filter' in kwargs:
+                for k in kwargs['filter'].keys():
+                    if k in row:
+                        if isinstance(kwargs['filter'][k], list):
+                            # for array values, test that it is 'in'
+                            if row[k] in kwargs['filter'][k]:
+                                if 'keyed_on' in kwargs:
+                                    rows[row[kwargs['keyed_on']]] = row
                                 else:
-                                    # no filtering, just add it
-                                    if 'keyed_on' in kwargs:
-                                        rows[row[kwargs['keyed_on']]] = row
-                                    else:
-                                        rows.append(row)
+                                    rows.append(row)
+                        elif row[k] == kwargs['filter'][k]:
+                            # for scalar values, test equality
+                            if 'keyed_on' in kwargs:
+                                rows[row[kwargs['keyed_on']]] = row
+                            else:
+                                rows.append(row)
+            else:
+                # no filtering, just add it
+                if 'keyed_on' in kwargs:
+                    rows[row[kwargs['keyed_on']]] = row
+                else:
+                    rows.append(row)
 
-                linenum += 1
+        linenum += 1
 
-        f.close()
-        return rows
+    f.close()
+    return rows
 
 
 def create_response(data):
@@ -126,7 +132,7 @@ def filter_dictionaries(*args, **kwargs):
                 if item[key] == kwargs[key]:
                     filtered.append(item)
 
-        return filtered
+    return filtered
 
 
 # routing
@@ -140,7 +146,7 @@ def feeds():
                                     + filename + '/agency.txt')
         feeds.append(feed)
 
-        return create_response(feeds)
+    return create_response(feeds)
 
 
 @app.route('/<feedname>/')
@@ -148,11 +154,11 @@ def routes(feedname):
     if feedname not in os.listdir(app.config['GTFS_DIR']):
         abort(404)
 
-        filename = app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt'
-        routes = read_csv(filename, fields=['route_id', 'route_long_name',
-                                            'route_type'])
+    filename = app.config['GTFS_DIR'] + '/' + feedname + '/routes.txt'
+    routes = read_csv(filename, fields=['route_id', 'route_long_name',
+                                        'route_type'])
 
-        return create_response(routes)
+    return create_response(routes)
 
 
 @app.route('/<feedname>/rail/')
@@ -167,6 +173,7 @@ def rail_routes(feedname):
 
 @app.route('/<feedname>/<route_id>/')
 @app.route('/<feedname>/rail/<route_id>/')
+@cache.cached(timeout=50, key_prefix='route')
 def route(feedname, route_id):
     filename = app.config['GTFS_DIR'] + '/' + feedname + '/trips.txt'
     trips = read_csv(filename,
@@ -184,7 +191,6 @@ def route(feedname, route_id):
                           fields=['departure_time', 'drop_off_type',
                                   'pickup_type', 'stop_id', 'stop_sequence',
                                   'trip_id'])
-
     stop_times = sorted(stop_times, key=itemgetter('trip_id', 'stop_sequence'))
 
     stop_ids = []
@@ -192,39 +198,39 @@ def route(feedname, route_id):
     for stop_time in stop_times:
         stop_ids.append(stop_time['stop_id'])
 
-        filename = app.config['GTFS_DIR'] + '/' + feedname + '/stops.txt'
-        stops = read_csv(filename,
-                         filter={'stop_id': stop_ids},
-                         fields=['stop_id', 'stop_lon', 'stop_lat',
-                                 'stop_name'],
-                         keyed_on='stop_id')
+    filename = app.config['GTFS_DIR'] + '/' + feedname + '/stops.txt'
+    stops = read_csv(filename,
+                     filter={'stop_id': stop_ids},
+                     fields=['stop_id', 'stop_lon', 'stop_lat',
+                             'stop_name'],
+                     keyed_on='stop_id')
 
-        # get the service information for these trips
-        service_ids = list(set([trip['service_id']
-                                for trip in trips.values()]))
-        filename = app.config['GTFS_DIR'] + '/' + feedname + '/calendar.txt'
-        services = read_csv(filename,
-                            filter={'service_id': service_ids},
-                            keyed_on='service_id'
-                            )
+    # get the service information for these trips
+    service_ids = list(set([trip['service_id']
+                            for trip in trips.values()]))
+    filename = app.config['GTFS_DIR'] + '/' + feedname + '/calendar.txt'
+    services = read_csv(filename,
+                        filter={'service_id': service_ids},
+                        keyed_on='service_id'
+                        )
 
-        # TODO: deal with calendar_dates
+    # TODO: deal with calendar_dates
 
-        # Each service should contain its trips
-        for service_id in service_ids:
-            service_trips = filter_dictionaries(trips.values(),
-                                                service_id=service_id)
-            services[service_id]['trips'] = build_dictionary(service_trips,
-                                                             'trip_id')
+    # Each service should contain its trips
+    for service_id in service_ids:
+        service_trips = filter_dictionaries(trips.values(),
+                                            service_id=service_id)
+        services[service_id]['trips'] = build_dictionary(service_trips,
+                                                            'trip_id')
 
         # each trip contains its stops
         for trip_id in services[service_id]['trips'].keys():
             services[service_id]['trips'][trip_id]['stops'] = filter_dictionaries(stop_times, trip_id=trip_id)
 
-        # generate response
-        route = {'services': services, 'stops': stops}
+    # generate response
+    route = {'services': services, 'stops': stops}
 
-        return create_response(route)
+    return create_response(route)
 
 if __name__ == '__main__':
     app.run()
