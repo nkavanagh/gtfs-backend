@@ -49,3 +49,4 @@ docs/_build/
 
 # pymode
 .ropeproject/
+.elasticbeanstalk/
