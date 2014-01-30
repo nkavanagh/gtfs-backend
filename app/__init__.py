@@ -19,7 +19,8 @@ GTFS_ROUTE_TYPE_FUNICULAR = 7
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-app.config['GTFS_DIR'] = '/var/gtfs'
+app.config['GTFS_DIR'] = os.path.join(app.instance_path, 'feeds')
+
 
 # cache
 
@@ -223,11 +224,12 @@ def route(feedname, route_id):
         service_trips = filter_dictionaries(trips.values(),
                                             service_id=service_id)
         services[service_id]['trips'] = build_dictionary(service_trips,
-                                                            'trip_id')
+                                                         'trip_id')
 
         # each trip contains its stops
         for trip_id in services[service_id]['trips'].keys():
-            services[service_id]['trips'][trip_id]['stops'] = filter_dictionaries(stop_times, trip_id=trip_id)
+            stops = filter_dictionaries(stop_times, trip_id=trip_id)
+            services[service_id]['trips'][trip_id]['stops'] = stops
 
     # generate response
     route = {'services': services, 'stops': stops}
