@@ -18,7 +18,7 @@ GTFS_ROUTE_TYPE_FUNICULAR = 7
 # the app
 
 app = Flask(__name__)
-app.config['DEBUG'] = False
+app.config['DEBUG'] = True
 app.config['GTFS_DIR'] = os.path.join(app.instance_path, 'feeds')
 
 
