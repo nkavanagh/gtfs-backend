@@ -50,4 +50,6 @@ docs/_build/
 
 # pymode
 .ropeproject/
+
+# AWS
 .elasticbeanstalk/
