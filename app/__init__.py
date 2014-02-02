@@ -18,15 +18,15 @@ GTFS_ROUTE_TYPE_FUNICULAR = 7
 # the app
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 app.config['GTFS_DIR'] = os.path.join(app.instance_path, 'feeds')
-
+app.config['LOG_DIR'] = os.getenv('LOG_DIR',
+                                  os.path.join(app.instance_path, 'logs'))
 
 # cache
-
 cache = Cache(config={'CACHE_TYPE': 'filesystem',
                       'CACHE_KEY_PREFIX': 'gtfs.',
-                      'CACHE_DIR': os.environ.get('TMPDIR'),
+                      'CACHE_DIR': os.getenv('TMPDIR', '/tmp'),
                       'CACHE_DEFAULT_TIMEOUT': 57600})
 cache.init_app(app)
 
@@ -142,6 +142,7 @@ def filter_dictionaries(*args, **kwargs):
 
 @app.route('/')
 def feeds():
+    app.logger.info('Showing feeds from %s', app.config['GTFS_DIR'])
     feeds = []
     for filename in os.listdir(app.config['GTFS_DIR']):
         feed = {'feed_name': filename}
