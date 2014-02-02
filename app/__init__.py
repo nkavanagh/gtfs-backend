@@ -23,10 +23,9 @@ app.config['GTFS_DIR'] = os.path.join(app.instance_path, 'feeds')
 
 
 # cache
-
 cache = Cache(config={'CACHE_TYPE': 'filesystem',
                       'CACHE_KEY_PREFIX': 'gtfs.',
-                      'CACHE_DIR': os.environ.get('TMPDIR'),
+                      'CACHE_DIR': os.getenv('TMPDIR', '/tmp'),
                       'CACHE_DEFAULT_TIMEOUT': 57600})
 cache.init_app(app)
 
