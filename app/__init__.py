@@ -18,14 +18,15 @@ GTFS_ROUTE_TYPE_FUNICULAR = 7
 # the app
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
-app.config['GTFS_DIR'] = '/var/gtfs'
+app.config['DEBUG'] = False
+app.config['GTFS_DIR'] = os.path.join(app.instance_path, 'feeds')
+app.config['LOG_DIR'] = os.getenv('LOG_DIR',
+                                  os.path.join(app.instance_path, 'logs'))
 
 # cache
-
 cache = Cache(config={'CACHE_TYPE': 'filesystem',
                       'CACHE_KEY_PREFIX': 'gtfs.',
-                      'CACHE_DIR': os.environ.get('TMPDIR'),
+                      'CACHE_DIR': os.getenv('TMPDIR', '/tmp'),
                       'CACHE_DEFAULT_TIMEOUT': 57600})
 cache.init_app(app)
 
@@ -141,6 +142,7 @@ def filter_dictionaries(*args, **kwargs):
 
 @app.route('/')
 def feeds():
+    app.logger.info('Showing feeds from %s', app.config['GTFS_DIR'])
     feeds = []
     for filename in os.listdir(app.config['GTFS_DIR']):
         feed = {'feed_name': filename}
@@ -223,11 +225,12 @@ def route(feedname, route_id):
         service_trips = filter_dictionaries(trips.values(),
                                             service_id=service_id)
         services[service_id]['trips'] = build_dictionary(service_trips,
-                                                            'trip_id')
+                                                         'trip_id')
 
         # each trip contains its stops
         for trip_id in services[service_id]['trips'].keys():
-            services[service_id]['trips'][trip_id]['stops'] = filter_dictionaries(stop_times, trip_id=trip_id)
+            stops = filter_dictionaries(stop_times, trip_id=trip_id)
+            services[service_id]['trips'][trip_id]['stops'] = stops
 
     # generate response
     route = {'services': services, 'stops': stops}
